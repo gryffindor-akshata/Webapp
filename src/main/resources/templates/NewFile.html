@@ -1,0 +1,197 @@
+<html ng-app="openAPIClient">
+
+<head>
+    <title>OPEN API</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+</head>
+
+<body ng-controller="AppController as appController">
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand">AkaTec OPEN API client  </a>
+                <a class="navbar-brand">|</a>
+                <a class="navbar-brand" href="https://ac.akamai.com/docs/DOC-25539" target="_blank" >  User Guide</a>
+            </div>
+            <img class="logo" src="img/aps-logo.png">
+        </div>
+    </nav>
+
+    <div class="container-fluid ng-cloak">
+      <div ng-show="showSessionTimeoutDiv" class="text-center alert alert-danger" role="alert">Session timed out. Please wait while we relogin you.</div>
+        <form name="uploadForm" ng-submit="uploadClientDetailsFile()" novalidate ng-init="showUploadError=false;uploaded=false;">
+            <div class="col-sm-6">
+                <div class="col-sm-12" style="margin-left:-15px;">
+                    <div class="form-group">
+                        <label for="credentialsFile">1. Upload client credentials file from Luna</label>
+                        <br>
+                        <!--Code for File upload starts here-->
+                        <input type="file" ngf-select="uploadFile($file,$invalidFiles)" accept="text/plain">(Only text files are accepted)
+                        <!--Code for File upload ends here-->
+                        <span ng-show="uploaded && showUploadError" style="color: red;">(could not find the client credentails. File may be invalid)</span>
+                        <img id="spinner" ng-src="img/spinner.gif" style="display:none;">
+                    </div>
+                </div>
+        </form>
+
+       <form role="form" id="requestInfoForm" name="requestInfoForm" novalidate ng-submit="requestInfoForm.$valid && isHeaderDuplicationValidated() && !showHeaderDuplicationError && validateRequestBody() && appController.makeApiCall()" novalidate>
+
+            <div ng-hide="false" style="margin-left:-15px">
+                <div class="col-sm-6">
+
+                    <label for="method ">Host: <span class="compulsoryField">*</span></label><span ng-show="submitted && requestInfoForm.host.$invalid" style="color:red">This field is required</span>
+
+                    <input type="text" class="form-control ng-pristine ng-invalid" id="host" name="host" ng-model="appController.apiRequest.clientCredentials.host" uib-typeahead="hostname for hostname in hostnames | filter:$viewValue | limitTo:10" typeahead-min-length="0" required />
+
+                    <label for="method ">Access Token:<span class="compulsoryField">*</span></label><span ng-show="submitted && requestInfoForm.accessToken.$invalid" style="color:red">This field is required</span>
+                    <input type="text " class="form-control ng-pristine ng-invalid" id="accessToken " name="accessToken " ng-model="appController.apiRequest.clientCredentials.accessToken" uib-typeahead="accessToken for accessToken in accessTokens | filter:$viewValue | limitTo:10" typeahead-min-length="0" required/>
+
+                </div>
+
+                <div class="col-sm-6">
+                    <label for="method ">Client Token: <span class="compulsoryField">*</span></label><span ng-show="submitted && requestInfoForm.clientToken.$invalid" style="color:red">This field is required</span>
+                    <input type="text " class="form-control ng-pristine ng-invalid" id="clientToken" name="clientToken " ng-model="appController.apiRequest.clientCredentials.clientToken" uib-typeahead="clientToken for clientToken in clientTokens | filter:$viewValue | limitTo:10" typeahead-min-length="0" required/>
+
+                    <label for="method ">Secret: <span class="compulsoryField">*</span></label> <span ng-show="submitted && requestInfoForm.secret.$invalid" style="color:red">This field is required</span>
+                    <input type="text " class="form-control ng-pristine ng-invalid" id="secret" name="secret " ng-model="appController.apiRequest.clientCredentials.secret" uib-typeahead="secret for secret in secrets | filter:$viewValue | limitTo:10" typeahead-min-length="0" required/>
+                    <br>
+
+                </div>
+            </div>
+
+            <div>
+                <label for="endpoint ">2. Endpoint (without host name ex: /ccu/v2/queues/default) <span class="compulsoryField">*</span></label> <span ng-show="submitted && requestInfoForm.endpoint.$invalid" style="color:red">This field is required</span>
+            <input type="text" id="endpoint" name="endpoint" class="form-control ng-pristine ng-invalid" ng-model="appController.apiRequest.endPoint" uib-typeahead="endpointoption for endpointoption in endpointsList | filter:$viewValue | limitTo:10" typeahead-min-length="1" required pattern="/.+" />
+            </div>
+            <br>
+            <div>
+            <label for="method ">3. Request Method:<span class="compulsoryField">*</span></label><span ng-show="submitted && requestInfoForm.method.$invalid" style="color:red">This field is required</span>
+            <select class="form-control " id="method " name="method" class="col-sm-4" rows="10" ng-model="appController.apiRequest.requestMethod" required ng-options="requestMethod for requestMethod in requestMethods" ng-init="appController.apiRequest.requestMethod=appController.apiRequest.requestMethod|| requestMethods[0]" ng-change="appController.requestMethodUpdated()">
+            </select>
+</div>
+            <br>
+            <div ng-show="appController.showRequestBodyDetails">
+                <!--Show request body div starts here-->
+                <label for="contentType ">Content-Type</label>
+                 <input type="text" id="contentType" name="contentType" class="form-control ng-pristine " ng-model="contentType" uib-typeahead="contentTypeOption for contentTypeOption in contentTypes | filter:$viewValue | limitTo:10" typeahead-min-length="0" pattern=".*\/.*">
+
+                <br>
+
+                 <label for="requestBody">Request Body<span id="requestBody" name="requestBody"></span></label>&nbsp;&nbsp;<span ng-show="showRequestBodyFormatWarning" style="color:red">(Request body should be in json format)</span>
+                <textarea class="form-control " rows="10 " name="requestBody " id="requestBody " ng-model="appController.apiRequest.requestBody"></textarea>
+
+                <br>
+         <!--Show Request Body div ends here-->
+            </div>
+            <!--Add Header section starts here-->
+                <div class="row" style="margin-bottom: 10px;">
+                <button style="margin-bottom: 10px; margin-left: 15px" class="btn btn-primary" ng-click="addHeader()" type="button">Add Header</button>
+                     <div ng-show="showWarning && methodToDisplayWarning" style="margin-left:15px;color:darkorange;margin-bottom: 15px;font-size: 15px;">
+                        <strong>Warning!</strong>&nbsp;The Content-Type header from Add Headers section will overide the previously seleted Value
+                    </div>
+                    <div class="row" style="margin: 5px 0px;" ng-repeat="x in customHeaders">
+                    <div class="col-sm-4">
+                    <input class="form-control" type="text" value="x.header" placeholder="Header" ng-model="x.header" name="header{{$index}}" required ng-change="checkHeaderValue(x.header)">
+    <span ng-show="submitted && requestInfoForm.header{{$index}}.$invalid" style="color:red">This field is required</span>
+                    </div>
+                    <div class="col-sm-4">
+                    <input class="form-control" type="text" value="x.value" placeholder="Value" ng-model="x.value" name="value{{$index}}" required>
+                        <span ng-show="submitted && requestInfoForm.value{{$index}}.$invalid" style="color:red">This field is required</span>
+                    </div>
+                    <div class="col-sm-2">
+                    <button class="btn btn-primary" ng-click="removeHeader($index)" type="button">-</button>
+                    </div>
+
+                </div>
+                </div>
+            <!--Add Header section ends here-->
+
+            <input type="submit" name="submit" id="submit" value="Submit" class="btn btn-primary" ng-click="checkSubmitValidation()"/> &nbsp; &nbsp;<span ng-show="submitted && !(requestInfoForm.$valid)" style="color: red;">(one or more fields are invalid).</span>
+            <span ng-show=showHeaderDuplicationError && g-show="submitted && !(requestInfoForm.$valid)" style="color: red;">Header Duplication is not Allowed</span>
+
+ <input type="submit" name="List endpoints" id="List endpoints" value="List endpoints" class="btn btn-primary" ng-click="getEndpoints()/> 
+
+
+            <img id="spinner2" ng-src="img/spinner.gif" style="display:none;">
+
+        </form>
+
+        <br>
+
+        </div>
+
+        <div class="col-sm-5" ng-show="appController.responseFetched">
+
+
+            <div class="form-group ">
+                <div>
+                <label for="request">Request:<span id="defaultspan" name="defaultspan"></span></label>
+                <!--Code for Download button starts here-->
+                <div id="downloadResultsDiv" style="text-align:center;">
+               <div style="display:none;" id="downloadSpinnerDiv"><img id="spinner4" ng-src="/aoc/img/spinner.gif"></div>
+                    <div style="display:inline;"><button data-toggle="tooltip" data-placement="top" tooltip title="Download Complete Results" id="downloadButton" type="button" class="btn btn-success downloadResultsButton" ng-click="computeDownloadResults()"> <span>Download</span>&nbsp<span class="glyphicon glyphicon-download-alt"></span>
+               </button></div>
+            </div>
+           <a id="downloadLink" ng-hide=true ng-href="{{ fileUrl }}" download="results.txt">download</a>
+                <!--Code for download button ends here-->
+                </div>
+                <textarea class="form-control" rows="10" name="request" id="request" ng-model="appController.apiResponse.request"></textarea>
+
+                <br>
+
+                <label for="response">Response:<span id="defaultspan " name="defaultspan"></span></label>
+
+                <textarea class="form-control" rows="10 " name="response" id="response" ng-model="appController.apiResponse.response"></textarea>
+
+                <br>
+
+                <textarea class="form-control" rows="10 " name="endpoints" id="appController.endpoints" ng-model=" "></textarea>
+
+
+            </div>
+        </div>
+
+        <div class="col-sm-10" ng-show="appController.showegcurl">
+          <pre class="code">{{egcurlrequest}}</pre>
+        </div>
+       <div class="col-sm-10" ng-show="appController.responseFetched">
+           <br>
+
+<!--Code for logs starts here-->
+           <div id="raw_log_lines">
+               <div>
+               <form action="http://lp.engr.akamai.com/lp.cgi" method="POST" target="_blank">
+                   <label for="logs">Logs:<span id="defaultspan" name="defaultspan"></span></label>
+                   <input type="submit" value="Parse Log Lines" class='parseLogButton'>
+                   <br>
+                   <img id="spinner3" ng-src="img/spinner.gif" style="display:none;">
+                  <textarea name="loglines" id='logs' ng-model="logs" class='table-bordered' style='width:100%; min-height:150px;'></textarea>
+               </form></div>
+               <div>
+               <form action="https://tools.gss.akamai.com/fetch-view-logs/" method="POST" target="_blank">
+                   <textarea name="loglines" id='logs_fv' ng-model="logs" class='table-bordered' style='width:100%; min-height:150px;' hidden></textarea>
+                   <input type="submit" value="Fetch & View" class='fetchViewButton'>
+               </form>
+                   </div>
+           </div>
+<!--Code for logs ends here-->
+
+        </div>
+
+        <script type="text/javascript" src="js/angular.min.js"></script>
+                <script type="text/javascript" src="js/angular-resource.js"></script>
+                <script type="text/javascript" src="js/angular-route.js"></script>
+
+        <script type="text/javascript" src="js/ng-file-upload.min.js"></script>
+        <script type="text/javascript" src="js/ui-bootstrap-tpls-1.3.2.min.js"></script>
+        <script type="text/javascript" src="js/ng-common.js"></script>
+        <script type="text/javascript" src="js/angular-cookies.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+</body>
+</html>

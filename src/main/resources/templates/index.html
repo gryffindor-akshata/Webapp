@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+ <head>
+ <meta charset="utf-8">
+ <title>Tools</title>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ 
+ </head>
+ 
+ <body class="col-md-12">
+ <h1>Diagnostic Tools</h1>
+ <div id="display-resources">
+ <br>
+ <p>Enter IP Address</p>
+ </div>
+
+ 
+ <form>
+ IP Address:<br> 
+  <input type="text" name="ip" id="addr"> <br> <br>
+   <p>Select a command:</p>
+  <input type="radio" name="tool" id="Ping" checked> Ping<br>
+  <input type="radio" name="tool" id="Traceroute"> Traceroute<br>
+  <input type="radio" name="tool" id="MTR"> MTR<br>
+  <input type="radio" name="tool" id="Telnet"> Telnet
+  <br> <br>
+  <a href="#" class="btn btn-primary" id="submit">Submit</a>
+</form>
+<br>
+<br>
+<p id="demo"></p>
+ <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
+
+ 
+ <script type="text/javascript" src="resources.js"></script>
+ 
+<footer class="footer">
+<p class="footer"></p>
+<img class="facebook" src="akamai.png" alt="Äkamai logo"/>
+
+</footer>
+
+
+ </body>
+</html>
